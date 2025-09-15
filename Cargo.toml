@@ -1,0 +1,13 @@
+[package]
+name = "mrfy"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+anyhow            = "1"
+clap              = { version = "4.0", features = ["derive"] }
+json-event-parser = "0.2"
+flate2            = "1"
+thiserror         = "1"
+indicatif         = "0.17"
+
