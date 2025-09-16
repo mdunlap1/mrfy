@@ -9,6 +9,47 @@
 //! Will return Error to main upon any and all fatal errors and in the event that a user
 //! specified npi is in the dataset but missing the group id. 
 //! (Might remove all non-fatal errors in the future.)  
+//!
+//! The program assumes the following basic format of the JSON
+//! ```
+//! {
+//!    "reporting_entity_name": "Aetna Signature Administrators",
+//!    "reporting_entity_type": "Third Party Vendor",
+//!    "last_updated_on":"2025-04-05",
+//!    "version":"1.3.1",
+//!    "provider_references":[
+//!        {"provider_group_id":1,
+//!         "provider_groups":[
+//!             {"npi":[],"tin":{"type":"ein","value":""}}
+//!         ]
+//!        }
+//!    ],
+//!    "in_network":[
+//!        {"negotiation_arrangement":"alpha",
+//!         "name":"Item 1",
+//!         "billing_code_type":"Type 1",
+//!         "billing_code_type_version":"2022",
+//!         "billing_code":"Code 1",
+//!         "description":"Item 1",
+//!         "negotiated_rates":[
+//!             {
+//!                 "provider_references":[1,2,3],
+//!                 "negotiated_prices":[
+//!                     {"negotiated_type":"neg type 1",
+//!                     "negotiated_rate":9.99,
+//!                      "expiration_date":"9999-12-31",
+//!                      "service_code":["A", "B", "C"],
+//!                      "billing_class":"class 1"}
+//!                 ]
+//!             }
+//!        ]
+//!      }
+//!    ]
+//!}
+//!```
+//!
+//! Key ordering is *not* assumed. Unsupported keys have handling for them.
+
 
 
 #![allow(non_camel_case_types)] // TODO remove when done
