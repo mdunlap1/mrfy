@@ -60,7 +60,7 @@ For now, it will be left to the user to find the data.
 ### Running the program
 The program is currently run with:
 ```
-mrfy <INPUT_PATH> <DATA_PATH> [BUFF\_SIZE]
+mrfy <INPUT_PATH> <DATA_PATH> [BUFF_SIZE]
 ```
 
 - INPUT\_PATH is to the input file mentioned earlier.
