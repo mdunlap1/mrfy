@@ -58,9 +58,9 @@ Specifically it has been devleoped and tested on version 1.3.1 of that MRF.
 For now, it will be left to the user to find the data. 
 
 ### Running the program
-The program is currently run with:
+The program is currently run from the project directory with:
 ```
-mrfy <INPUT_PATH> <DATA_PATH> [BUFF_SIZE]
+cargo run <INPUT_PATH> <DATA_PATH> [BUFF_SIZE]
 ```
 
 - INPUT\_PATH is to the input file mentioned earlier.
