@@ -23,7 +23,7 @@ The input file should contain an un-indented line that says "npi" followed by
 one or more lines under it, each specifying an npi and being indented with one
 or more spaces (not tabs).
 
-Billing codes are similarly specified, by a non-indented line fiving the billing
+Billing codes are similarly specified, by a non-indented line giving the billing
 code type, followed by one or more billing codes of that type, each written on 
 its own line and indented with one or more spaces (not tabs). Instead of a 
 billing code type, one can put an asterisk.
@@ -53,7 +53,7 @@ cpt
 Currently this program only supports the In-network Rates & Allowed Amounts File
 for Aetna Signature Administrators.
 
-Specifically it has been devleoped and tested version 1.3.1.
+Specifically it has been devleoped and tested on version 1.3.1 of that MRF.
 
 For now, it will be left to the user to find the data. 
 
