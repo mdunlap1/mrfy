@@ -16,23 +16,24 @@ services.
 Consequently the aim is not to convert to say parquet format for efficient 
 querying, rather to stream parse the data and extract relevant records. 
 
-The Aetna Signature Administrators MRF is available as a compressed JSON file.
-The compressed size if about 5 GiB. If fully de-compressed it would be about 
-200 GiB. This program decompresses in chunks, and parses a stream of data, 
-instead of decompressing the whole file. 
-
 
 ## Use
 ### Writing an input query file.
-The file will specify one or more NPIs (National Provider Numbers) and one or 
-more billing codes. 
+The input file should contain an un-indented line that says "npi" followed by
+one or more lines under it, each specifying an npi and being indented with one
+or more spaces (not tabs).
 
-We need a line that says npi under which we will have one NPI listed per
-line indented with one or more spaces. 
+Billing codes are similarly specified, by a non-indented line fiving the billing
+code type, followed by one or more billing codes of that type, each written on 
+its own line and indented with one or more spaces (not tabs). Instead of a 
+billing code type, one can put an asterisk.
 
-The billing codes will be indented with one more spaces and listed under a line
-containing either the billing codes type or an asterisk if we do not care (or
-know) what the type is.
+NOTE: The program will pull data that matches the code *regardless* of 
+      the code type. The code type is specified for readability and for
+      a final printout that tells which (code, code type) pair didn't have 
+      billing records for the given NPIs. If using asterisk for type, the 
+      failure to match is reported only if there were absolutely no matches 
+      *of any billing code type* for that code. 
 
 
 For example:
@@ -47,46 +48,43 @@ cpt
   70071
 ```
 
-NOTE: The program will pull data that matches the code *regardless* of 
-      the code type. The code type is specified for readability and for
-      a final printout that tells which codes were not found. 
 
 ### Accessing the target data file. 
 Currently this program only supports the In-network Rates & Allowed Amounts File
 for Aetna Signature Administrators.
 
-Specifically it has been devleoped and tested on the file with metadata:
+Specifically it has been devleoped and tested version 1.3.1.
 
-```
-reporting_entity_name: Aetna Signature Administrators
-reporting_entity_type: Third Party Vendor
-last_updated_on: 2025-04-05
-version: 1.3.1
-```
+For now, it will be left to the user to find the data. 
 
 ### Running the program
 The program is currently run with:
 ```
-Usage: mrfy <INPUT_PATH> <DATA_PATH> [BUFF_SIZE]
+mrfy <INPUT_PATH> <DATA_PATH> [BUFF\_SIZE]
 ```
 
-input path is to the input file mentioned earlier
-data path is to the .gz compressed MRF file
-buff size allows for optional changing of the buffer size (default is 128 MiB).
+- INPUT\_PATH is to the input file mentioned earlier.
+- DATA\_PATH  is to the MRF file
+- BUFF\_SIZE  optionally change the buffer size for buffer used to read the file data file (default is 128 MiB).
 
-The program will print out the metadata for the file and give status updates
-once it finds the "provider references" array and the "in network" array. 
-If no NPIs from the input query match it will exit early. 
+Status updates will print to stdrr. Any billing records that match the query
+will be printed to stdout in csv file format (a header will also print). 
 
-Once it start processing the "in network" array a progress bar will display
-giving an estimate of how much more data there is to process. 
+When the program is done processing the file it will report (to stderr) any 
+part of the query that didn't have a match. More specifically a code will be
+reported as having no matches if none of the NPIs had a billing record for it.
+To accommodate the possibility that an NPI might have more than one tin associated with it, any (npi,tin) pair found in the dataset that didn't match on at
+least one billing code will be reported. Any NPI for which none of the user
+supplied billing codes turned up a result will be reported as having zero 
+matches. 
 
-Any data records that match the input query get printed to stdout as a CSV file.
+#### Aetna Signature Administrators
+The Aetna Signature Administrators MRF is available as a compressed JSON file.
+The compressed size if about 5 GiB. If fully de-compressed it would be about 
+200 GiB. This program decompresses in chunks, and parses a stream of data, 
+instead of decompressing the whole file at once. 
 
-
-## Considerations
-The program took a little less than eight hours to run to completion on a 14 
-year old laptop. It might be best to run with tmux and come back to it. 
+(See asa.rs for more assertions about the format.)
 
 
 ## Disclaimer
@@ -95,4 +93,4 @@ any purpose. The author has no affiliation or endorsement of any kind for this
 program. Anyone that uses this takes responsibility for the results. 
 
 The program has unit tests, and some unoffical integration tests have been done.
-However, more testing is still needed. 
+However, more testing is still needed.
