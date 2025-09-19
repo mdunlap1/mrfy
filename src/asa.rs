@@ -224,7 +224,6 @@ impl Price {
         write!(out, "{}",self.service_code)?;
         write!(out, ",")?;
         write!(out, "{}",self.billing_class)?;
-        out.flush()?;
         Ok(())
 
     }
@@ -350,6 +349,7 @@ fn print_header(out: &mut impl Write) -> Result< (), std::io::Error> {
     // From Price stuct
     write!(out, "negotiated_type,negotiated_rate,expiration_date,service_code,billing_class")?;
     write!(out, "\n")?;
+    out.flush()?;
 
     Ok(())
 }
