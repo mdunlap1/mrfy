@@ -82,8 +82,9 @@ struct Meta {
     num_fields: u8,
 }
 
-// Tracks the JSON file metadata
+/// Tracks the JSON file metadata
 impl Meta {
+    /// Creates a Meta struct 
     fn new() -> Self {
         Self {
             reporting_entity_name: None,
@@ -151,7 +152,7 @@ impl Meta {
 
 } // End impl for Meta
 
-// Holds information for a negotiated price
+/// Holds information for a negotiated price
 #[derive(Debug,PartialEq,Clone)]
 struct Price {
     negotiated_type: String,
@@ -161,6 +162,7 @@ struct Price {
     billing_class: String,
 }
 impl Price {
+    /// Creates a Price struct
     fn new () -> Self {
         Self {
             negotiated_type: String::from(""),
@@ -230,14 +232,15 @@ impl Price {
 
 }
 
-// Holds negotiated price information and providers the associated provider references for which
-// those prices are valid. Progam will filter provider_refercnes to only those that are relevant. 
+/// Holds negotiated price information and providers the associated provider references for which
+/// those prices are valid. Progam will filter provider_refercnes to only those that are relevant. 
 #[derive(Debug,Clone,PartialEq)]
 struct Rate {
     provider_references: Vec<u64>,
     negotiated_prices: Vec<Price>, 
 }
 impl Rate {
+    /// Creates a new Rate struct.
     fn new() -> Self {
         Self {
             provider_references: Vec::new(),
@@ -251,7 +254,7 @@ impl Rate {
     }
 }
 
-// Used to hold the basic in-network billing information and a reference to negotiated-rates
+/// Used to hold the basic in-network billing information and a reference to negotiated-rates
 #[derive(Debug)]
 struct Network {
     negotiation_arrangement: String,
@@ -264,6 +267,7 @@ struct Network {
 }
 
 impl Network {
+    /// Creates a new Network struct
     fn new() -> Self {
         Self {
             negotiation_arrangement: String::from(""),
@@ -413,6 +417,7 @@ fn print_record(network: &Network,
 fn process_negotiated_prices<R: Read>(parser: &mut ReaderJsonParser<R>,
                                      ) -> Result< Vec<Price>, Box<dyn std::error::Error> > {
 
+    // Used to handle price object keys 
     #[derive(PartialEq)]
     enum State {
         negotiated_type,
