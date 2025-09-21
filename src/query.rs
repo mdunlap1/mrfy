@@ -186,6 +186,12 @@ impl Query {
                     else if value.eq_ignore_ascii_case(c) && code_type == "*" {
                         code.recorded = true;
                     }
+                    else if value == "*" && code_type == "*" {
+                        code.recorded = true;
+                    }
+                    else if value == "*" && code_type.eq_ignore_ascii_case(c_type) {
+                        code.recorded = true;
+                    }
                 }
             }
         }

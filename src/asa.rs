@@ -853,7 +853,8 @@ fn process_in_network<R: Read>(parser: &mut ReaderJsonParser<R>,
 
                    network.billing_code.make_ascii_uppercase();
 
-                   if !codeset.contains(&network.billing_code) {
+                   if !codeset.contains(&network.billing_code) &&
+                      !codeset.contains("*") {
                        network.clear_entries();
                        ff_to_next_obj(parser, &mut cb, &mut sq)?;
                    }
