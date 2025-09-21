@@ -1310,7 +1310,7 @@ pub fn run(query: &mut Query,
         if !is_empty {
             println!("Found the following unsupported keys");
             for key in set.borrow().iter() {
-                println!("{}", key);
+                eprintln!("{}", key);
             }
         }
     });
