@@ -48,6 +48,9 @@ cpt
   70071
 ```
 
+One can also use asterisk for the billing code. In that case all billing codes
+of all types for the given NPIs will match. 
+
 
 ### Accessing the target data file. 
 Currently this program only supports the In-network Rates & Allowed Amounts File
