@@ -1352,7 +1352,7 @@ pub fn run(query: &mut Query,
     UNSUPPORTED_KEYS.with(|set| {
         let is_empty = set.borrow().is_empty();
         if !is_empty {
-            println!("Found the following unsupported keys");
+            eprintln!("Found the following unsupported keys");
             for key in set.borrow().iter() {
                 eprintln!("{}", key);
             }
