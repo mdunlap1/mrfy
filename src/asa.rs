@@ -68,6 +68,8 @@ use json_event_parser::{ReaderJsonParser, JsonEvent};
 use indicatif::{ProgressBar};
 
 // Used to track keys in the JSON that we didn't expect
+// User will not be told if the key happens in more than one object type.
+// The notification will happen only where the key is first discovered. 
 thread_local! {
     static UNSUPPORTED_KEYS: RefCell<HashSet<String>> = RefCell::new(HashSet::new());
 }
@@ -153,6 +155,7 @@ impl Meta {
 } // End impl for Meta
 
 /// Holds information for a negotiated price
+// TODO: add billing_code_modifier support
 #[derive(Debug,PartialEq,Clone)]
 struct Price {
     negotiated_type: String,
@@ -476,6 +479,9 @@ fn process_negotiated_prices<R: Read>(parser: &mut ReaderJsonParser<R>,
                 }
                 else {
                     UNSUPPORTED_KEYS.with(|set| {
+                        if !set.borrow().contains(key.as_ref()) {
+                            eprintln!("Unsupported key {} found in Price", key.as_ref());
+                        }
                         set.borrow_mut().insert(String::from(key.as_ref()));
                     });
                     bypass_key(parser)?;
@@ -587,6 +593,10 @@ fn process_negotiated_rates<R: Read>(parser: &mut ReaderJsonParser<R>,
                 }
                 else {
                     UNSUPPORTED_KEYS.with(|set| {
+                        if !set.borrow().contains(key.as_ref()) {
+                            eprintln!("Unsupported key {} found in \
+                                      negotiated_rates", key.as_ref());
+                        }
                         set.borrow_mut().insert(String::from(key.as_ref()));
                     });
                     bypass_key(parser)?;
@@ -819,6 +829,10 @@ fn process_in_network<R: Read>(parser: &mut ReaderJsonParser<R>,
                 }
                 else { 
                     UNSUPPORTED_KEYS.with(|set| {
+                        if !set.borrow().contains(key.as_ref()) {
+                            eprintln!("Unsupported key {} found in Network",
+                                     key.as_ref());
+                        }
                         set.borrow_mut().insert(String::from(key.as_ref()));
                     });
                     bypass_key(parser)?;
@@ -967,6 +981,11 @@ fn process_provider_groups<R: Read>(parser: &mut ReaderJsonParser<R>,
                 }
                 else {
                     UNSUPPORTED_KEYS.with(|set| {
+                        if !set.borrow().contains(key.as_ref()) {
+                            eprintln!("Unsupported key {} found in \
+                                      provider_groups",key.as_ref());
+                        }
+
                         set.borrow_mut().insert(String::from(key.as_ref()));
                     });
                     bypass_key(parser)?;
@@ -1111,6 +1130,10 @@ fn process_provider_refs<R: Read>(parser: &mut ReaderJsonParser<R>,
                 }
                 else {
                     UNSUPPORTED_KEYS.with(|set| {
+                        if !set.borrow().contains(key.as_ref()) {
+                            eprintln!("Unsupported key {} found in \
+                                      provider_references", key.as_ref());
+                        }
                         set.borrow_mut().insert(String::from(key.as_ref()));
                     });
                     bypass_key(parser)?;
@@ -1278,6 +1301,10 @@ pub fn run(query: &mut Query,
 
                 else {
                     UNSUPPORTED_KEYS.with(|set| {
+                        if !set.borrow().contains(key.as_ref()) {
+                            eprintln!("Unsupported key {} found in \
+                                       top level", key.as_ref());
+                        }
                         set.borrow_mut().insert(String::from(key.as_ref()));
                     });
                     bypass_key(&mut parser)?;
