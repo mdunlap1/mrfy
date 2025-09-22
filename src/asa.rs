@@ -1500,6 +1500,9 @@ mod test_asa {
         let c2: Code = Code::new(&String::from("cpT"), &c); // Code and code type match (wrong case)
         let c3: Code = Code::new(&String::from("*"), &c); // Code matches, type is wildcard '*'
         let c4: Code = Code::new(&String::from("CPT"), &String::from("10003")); // Should not match at all
+        let c5: Code = Code::new(&String::from("LOCAL"), &String::from("*"));   // Should not match
+        let c6: Code = Code::new(&String::from("CPT"), &String::from("*"));     // Should match
+        let c7: Code = Code::new(&String::from("*"), &String::from("*"));       // Should match
 
         // Push copies to check vector
         check.push(c0.clone());
@@ -1507,11 +1510,17 @@ mod test_asa {
         check.push(c2.clone());
         check.push(c3.clone());
         check.push(c4.clone());
+        check.push(c5.clone());
+        check.push(c6.clone());
+        check.push(c7.clone());
+
 
         // Manually mark recorded or not
         check[0].recorded = true;
         check[2].recorded = true;
         check[3].recorded = true;
+        check[6].recorded = true;
+        check[7].recorded = true;
 
         // Push codes to code vec
         codes.push(c0);
@@ -1519,6 +1528,9 @@ mod test_asa {
         codes.push(c2);
         codes.push(c3);
         codes.push(c4);
+        codes.push(c5);
+        codes.push(c6);
+        codes.push(c7);
 
         let mut q = Query::new();
         q.codes = codes; // Move to Query to call log_code
