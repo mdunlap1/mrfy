@@ -1553,7 +1553,8 @@ mod test_asa {
              "negotiated_type":"gamma",
              "expiration_date":"9999-12-31",
              "service_code":["77"],
-             "billing_class":"nope"
+             "billing_class":"nope",
+             "billing_code_modifier":"FSX"
              }
 
         ]"#;
@@ -1586,6 +1587,7 @@ mod test_asa {
         p2.expiration_date.push_str("9999-12-31");
         p2.service_code.push_str("77 ");
         p2.billing_class.push_str("nope");
+        p2.billing_code_modifier.push_str("FSX");
 
         p0.push_defaults();
         p1.push_defaults();
