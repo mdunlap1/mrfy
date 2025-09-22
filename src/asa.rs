@@ -39,7 +39,8 @@
 //!                     "negotiated_rate":9.99,
 //!                      "expiration_date":"9999-12-31",
 //!                      "service_code":["A", "B", "C"],
-//!                      "billing_class":"class 1"}
+//!                      "billing_class":"class 1",
+//!                      "billing_code_modifier": "Mod"}
 //!                 ]
 //!             }
 //!        ]
@@ -163,6 +164,7 @@ struct Price {
     expiration_date: String,
     service_code: String,
     billing_class: String,
+    billing_code_modifier: String,
 }
 impl Price {
     /// Creates a Price struct
@@ -173,6 +175,7 @@ impl Price {
             expiration_date: String::from(""),
             service_code: String::from(""),
             billing_class: String::from(""),
+            billing_code_modifier: String::from(""),
         }
     }
 
@@ -184,6 +187,7 @@ impl Price {
             expiration_date: String::from("null"),
             service_code: String::from("null"),
             billing_class: String::from("null"),
+            billing_code_modifier: String::from("null"),
         }
     }
 
@@ -194,6 +198,7 @@ impl Price {
         self.expiration_date.clear();
         self.service_code.clear();
         self.billing_class.clear();
+        self.billing_code_modifier.clear();
     }
 
     /// Fills empty values in a Price struct with "null"
@@ -214,6 +219,9 @@ impl Price {
         if self.billing_class == "" {
             self.billing_class.push_str(default);
         }
+        if self.billing_code_modifier == "" {
+            self.billing_code_modifier.push_str(default);
+        }
 
     }
 
@@ -229,6 +237,8 @@ impl Price {
         write!(out, "{}",self.service_code)?;
         write!(out, ",")?;
         write!(out, "{}",self.billing_class)?;
+        write!(out, ",")?;
+        write!(out, "{}",self.billing_code_modifier)?;
         Ok(())
 
     }
@@ -354,7 +364,7 @@ fn print_header(out: &mut impl Write) -> Result< (), std::io::Error> {
     write!(out, ",")?;
 
     // From Price stuct
-    write!(out, "negotiated_type,negotiated_rate,expiration_date,service_code,billing_class")?;
+    write!(out, "negotiated_type,negotiated_rate,expiration_date,service_code,billing_class,billing_code_modifier")?;
     write!(out, "\n")?;
     out.flush()?;
 
@@ -428,6 +438,7 @@ fn process_negotiated_prices<R: Read>(parser: &mut ReaderJsonParser<R>,
         expiration_date,
         service_code,
         billing_class,
+        billing_code_modifier,
         undefined,
     }
 
@@ -477,6 +488,9 @@ fn process_negotiated_prices<R: Read>(parser: &mut ReaderJsonParser<R>,
                 else if key == "billing_class" {
                     state = State::billing_class;
                 }
+                else if key == "billing_code_modifier" {
+                    state = State::billing_code_modifier;
+                }
                 else {
                     UNSUPPORTED_KEYS.with(|set| {
                         if !set.borrow().contains(key.as_ref()) {
@@ -507,6 +521,9 @@ fn process_negotiated_prices<R: Read>(parser: &mut ReaderJsonParser<R>,
                 }
                 else if state == State::billing_class {
                     price.billing_class.push_str(s.as_ref());
+                }
+                else if state == State::billing_code_modifier {
+                    price.billing_code_modifier.push_str(s.as_ref());
                 }
                 else if state == State::undefined {
                     panic!("Unsupported key encountered in asa::process_negotiated_prices");
@@ -1570,6 +1587,10 @@ mod test_asa {
         p2.service_code.push_str("77 ");
         p2.billing_class.push_str("nope");
 
+        p0.push_defaults();
+        p1.push_defaults();
+        p2.push_defaults();
+
         check.push(p0);
         check.push(p1);
         check.push(p2);
@@ -1584,9 +1605,9 @@ mod test_asa {
 
         // Simple basic expected output
         let mut expected_out = String::from("");
-        expected_out.push_str("npi,tin_type,tin_value,group_id,negotiation_arrangement,name,billing_code_type,billing_code_type_version,billing_code,description,negotiated_type,negotiated_rate,expiration_date,service_code,billing_class\n");
+        expected_out.push_str("npi,tin_type,tin_value,group_id,negotiation_arrangement,name,billing_code_type,billing_code_type_version,billing_code,description,negotiated_type,negotiated_rate,expiration_date,service_code,billing_class,billing_code_modifier\n");
 
-        expected_out.push_str("1701,ein,101,11,alpha,Item 1,Type 1,2022,CODE 1,Item 1,neg type 1,9.99,9999-12-31,A B C ,class 1\n");
+        expected_out.push_str("1701,ein,101,11,alpha,Item 1,Type 1,2022,CODE 1,Item 1,neg type 1,9.99,9999-12-31,A B C ,class 1,null\n");
 
 
         // Case normal input
