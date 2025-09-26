@@ -10,4 +10,4 @@ json-event-parser = "0.2"
 flate2            = "1"
 thiserror         = "1"
 indicatif         = "0.17"
-
+assert_cmd        = "2"
