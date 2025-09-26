@@ -5,7 +5,7 @@ use std::process::Command; // Run programs
 #[test]
 fn intermediate_integration_test() -> Result<(), Box<dyn std::error::Error>> {
     let mut cmd = Command::cargo_bin("mrfy")?;
-    cmd.arg("testfiles/input_testfiles/input_for_intermediate").arg("testfiles/data_files/intermediate.json.gz");
+    cmd.arg("tests/testfiles/input_testfiles/input_for_intermediate").arg("tests/testfiles/data_files/intermediate.json.gz");
 
 
     cmd.assert()

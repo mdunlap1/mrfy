@@ -1625,7 +1625,7 @@ mod test_asa {
 
 
         // Case normal input
-        let path_str1 = "testfiles/data_files/basic_test.json.gz";
+        let path_str1 = "tests/testfiles/data_files/basic_test.json.gz";
         let filepath1: std::path::PathBuf = std::path::PathBuf::from(path_str1);
 
         let mut buffer = Vec::new();
@@ -1655,7 +1655,7 @@ mod test_asa {
         let mut buffer2 = Vec::new();
 
         // Case 2 in_network and provider_references are swapped
-        let path_str2 = "testfiles/data_files/backward_basic.json.gz";
+        let path_str2 = "tests/testfiles/data_files/backward_basic.json.gz";
         let filepath2: std::path::PathBuf = std::path::PathBuf::from(path_str2);
 
         let res2 = run(&mut q2, &filepath2, 256, &mut buffer2);

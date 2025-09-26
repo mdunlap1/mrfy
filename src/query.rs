@@ -336,7 +336,7 @@ mod tests {
     #[test]
     fn test_basic_input_read() {
         // Tests a non-defective basic input
-        let path_str = "testfiles/input_testfiles/query_basic_input";
+        let path_str = "tests/testfiles/input_testfiles/query_basic_input";
 
         let filepath: std::path::PathBuf = std::path::PathBuf::from(path_str);
             
@@ -372,7 +372,7 @@ mod tests {
         //         9999912
         //
         // Where the second code should have been of a different type
-        let path_str = "testfiles/input_testfiles/query_npi_not_specified";
+        let path_str = "tests/testfiles/input_testfiles/query_npi_not_specified";
         let filepath: std::path::PathBuf = std::path::PathBuf::from(path_str);
         let _ = read_input(&filepath);
     }
