@@ -6,9 +6,7 @@
 //!
 //! Will report unsupported keys encountered in JSON file. 
 //!
-//! Will return Error to main upon any and all fatal errors and in the event that a user
-//! specified npi is in the dataset but missing the group id. 
-//! (Might remove all non-fatal errors in the future.)  
+//! Will return Error to main upon any and all fatal errors.
 //!
 //! The program assumes the following basic format of the JSON
 //! ```
