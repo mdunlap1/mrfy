@@ -913,6 +913,8 @@ fn process_in_network<R: Read>(parser: &mut ReaderJsonParser<R>,
 
 
 /// Helper function to process_provider_refs. Works on the provider_groups array.
+/// Write in tin type and tin values for matching NPIs and marks them as needing group id.
+/// Writing in a group id is handed in process_provider_refs.
 fn process_provider_groups<R: Read>(parser: &mut ReaderJsonParser<R>,
                                     query: &mut Query,
                                     //providers: &mut Vec<Provider>,
@@ -921,6 +923,7 @@ fn process_provider_groups<R: Read>(parser: &mut ReaderJsonParser<R>,
     // To hold the tin type and tin values temporarily. 
     let mut t_type: Option<String> = None;
     let mut t_value: Option<String> = None;
+
     #[derive(PartialEq)]
     enum CaptureState {
         Ttype,
@@ -948,15 +951,15 @@ fn process_provider_groups<R: Read>(parser: &mut ReaderJsonParser<R>,
             JsonEvent::EndObject => {
                 cb -= 1;
                 if cb == 0 {
+
                     // check for missing values assign "null" if None
                     if t_type.is_none() {
-                        //eprintln!("WARNING: Missing tin_type for match in data, will use 'null'");
                         t_type = Some(String::from("null"));
                     }
                     if t_value.is_none() {
-                        //eprintln!("WARNING: Missing tin_value for match in data, will use 'null'");
                         t_value = Some(String::from("null"));
                     }
+
                     // write tin_type and tin_values
                     for p in providers.iter_mut() {
                         if p.needs_tin == true {
@@ -1068,13 +1071,8 @@ fn process_provider_groups<R: Read>(parser: &mut ReaderJsonParser<R>,
 }
 
 
-
-
-
-/// Processes the provider_renferences array in the JSON file.
-/// Works to get tin_type and tin_value and provicder references.
-/// Creates new entries in the Vec if an NPI has more than one provider group,
-/// and/or tin. Calls the helper process_provider_groups.
+/// Processes the provider_references array using the helper function process_provider_groups
+/// Will create a new Provider struct for npis with multiple tins, and/or multiple group ids.
 fn process_provider_refs<R: Read>(parser: &mut ReaderJsonParser<R>,
                                   //providers: &mut Vec<Provider>,
                                   query: &mut Query,
@@ -1095,6 +1093,9 @@ fn process_provider_refs<R: Read>(parser: &mut ReaderJsonParser<R>,
             }
             JsonEvent::EndObject => {
                 cb -= 1;
+                // When we reach end of object we have the tin types and values recorded
+                // All Provider structs that need g_id have been flagged.
+                // We merely need to record the value (if there is one) and reset the flags.
                 if cb == 0 {
                     // Handle care of missing pg_id
                     if pg_id.is_none() {
