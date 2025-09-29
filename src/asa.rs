@@ -55,7 +55,7 @@
 
 #![allow(non_camel_case_types)] // TODO remove when done
 use crate::query::{Query, Provider};
-use crate::error::{NonFatalError}; // TODO remove non-fatal errors?
+//use crate::error::{NonFatalError}; // TODO remove non-fatal errors?
 
 use std::fs::File;
 use std::io::{BufReader, Read, Write};
@@ -1082,8 +1082,6 @@ fn process_provider_refs<R: Read>(parser: &mut ReaderJsonParser<R>,
                                   query: &mut Query,
                                   ) -> Result<(), Box<dyn std::error::Error>> {
 
-    let mut non_fatal_err_seen: bool = false;
-
     // To hold the provider_group_id number 
     let mut pg_id: Option<u64> = None; 
 
@@ -1100,16 +1098,28 @@ fn process_provider_refs<R: Read>(parser: &mut ReaderJsonParser<R>,
             JsonEvent::EndObject => {
                 cb -= 1;
                 if cb == 0 {
+                    // Handle care of missing pg_id
                     if pg_id.is_none() {
-                        eprintln!("Error: provider group id not specified in datafile!");
-                        non_fatal_err_seen = true;
+                        eprintln!("WARNING: provider group id not specified in datafile!");
+                        // Print out the affected npis and reset them
+                        eprintln!("Affected NPIs:");
+                        for p in query.providers.iter_mut() {
+                            if p.needs_gid == true {
+                                eprintln!("npi: {}", p.npi);
+                                p.needs_gid = false;
+                            }
+                        }
+                        continue;
                     }
+
                     for p in query.providers.iter_mut() {
                         if p.needs_gid == true {
                             p.group_id = pg_id.clone();
                             p.needs_gid = false;
                         }
                     }
+                    // Reset group_id to None
+                    pg_id = None;
                 }
 
             }
@@ -1127,22 +1137,10 @@ fn process_provider_refs<R: Read>(parser: &mut ReaderJsonParser<R>,
                     continue;
                 }
                 else if key == "provider_groups" {
-                    let res = process_provider_groups(parser, 
-                                                      //providers,
-                                                      query);
+                    process_provider_groups(parser, 
+                                          //providers,
+                                            query)?;
                     
-                    match res {
-                        Ok(_) => {}
-                        Err(e) => {
-                            if e.downcast_ref::<NonFatalError>().is_some() {
-                                non_fatal_err_seen = true;
-                            }
-                            else {
-                                return Err(e);
-                            }
-                            
-                        }
-                    }
                     
                 }
                 else {
@@ -1165,10 +1163,6 @@ fn process_provider_refs<R: Read>(parser: &mut ReaderJsonParser<R>,
 
             _ => {}
         }
-    }
-
-    if non_fatal_err_seen == true {
-        return Err(Box::new(NonFatalError("Non fatal error in asa::process_provider_refs".to_string())));
     }
 
     Ok(())
