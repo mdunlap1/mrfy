@@ -1098,12 +1098,9 @@ fn process_provider_refs<R: Read>(parser: &mut ReaderJsonParser<R>,
                 if cb == 0 {
                     // Handle care of missing pg_id
                     if pg_id.is_none() {
-                        eprintln!("WARNING: provider group id not specified in datafile!");
-                        // Print out the affected npis and reset them
-                        eprintln!("Affected NPIs:");
+                        // Clean up needs_gid fields
                         for p in query.providers.iter_mut() {
                             if p.needs_gid == true {
-                                eprintln!("npi: {}", p.npi);
                                 p.needs_gid = false;
                             }
                         }
