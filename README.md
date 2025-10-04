@@ -83,8 +83,8 @@ matches.
 
 #### Aetna Signature Administrators
 The Aetna Signature Administrators MRF is available as a compressed JSON file.
-The compressed size if about 5 GiB. If fully de-compressed it would be about 
-200 GiB. This program decompresses in chunks, and parses a stream of data, 
+The compressed size is about 5 GiB. If fully de-compressed it would be about 
+211 GiB. This program decompresses in chunks, and parses a stream of data, 
 instead of decompressing the whole file at once. 
 
 (See asa.rs for more assertions about the format.)
