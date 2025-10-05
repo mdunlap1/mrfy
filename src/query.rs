@@ -44,7 +44,7 @@ impl Code {
 #[derive(Clone, Debug, PartialEq)]
 pub struct Provider {
     pub npi:       u64, 
-    pub group_id:  Option<u64>, 
+    pub group_id:  Option<String>, 
     pub tin_type:  Option<String>,
     pub tin_value: Option<String>,
     pub needs_tin: bool,
@@ -125,7 +125,7 @@ impl Query {
     /// use in writing output in csv format. 
     /// Purpose is to expedite processing for in_network objects and writting of records
     /// (We only need to walk the providers Vec when we mark which ones had a record.)
-    pub fn make_ref_map(&mut self) -> HashMap<u64, Vec<String>> {
+    pub fn make_ref_map(&mut self) -> HashMap<String, Vec<String>> {
         let mut ref_map = HashMap::new();
         for p in self.providers.iter() {
             match p {
@@ -134,7 +134,7 @@ impl Query {
                     if !ref_map.contains_key(group_id) {
                         let mut v = Vec::new();
                         v.push(val);
-                        ref_map.insert(*group_id, v);
+                        ref_map.insert(group_id.clone(), v);
                     }
                     else {
                         if let Some(v) = ref_map.get_mut(group_id) {
@@ -151,11 +151,11 @@ impl Query {
 
     /// Sets recorded to true for all Provider stucts with matching gid in Query.providers
     /// Intended to be used to track parts of query that had a match in the dataset. 
-    pub fn log_ref(&mut self, gid: u64) {
+    pub fn log_ref(&mut self, gid: &String) {
 
         for provider in self.providers.iter_mut() {
-            match provider.group_id {
-                Some(id) if id == gid => {
+            match &provider.group_id {
+                Some(id) if *id == *gid => {
                     provider.recorded = true;
                 }
                 _ => {}

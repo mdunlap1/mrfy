@@ -247,7 +247,7 @@ impl Price {
 /// those prices are valid. Progam will filter provider_refercnes to only those that are relevant. 
 #[derive(Debug,Clone,PartialEq)]
 struct Rate {
-    provider_references: Vec<u64>,
+    provider_references: Vec<String>,
     negotiated_prices: Vec<Price>, 
 }
 impl Rate {
@@ -376,7 +376,7 @@ fn print_header(out: &mut impl Write) -> Result< (), std::io::Error> {
 /// Calls log_ref and log_code from Query implementation.
 fn print_record(network: &Network, 
                 query: &mut Query,
-                ref_map: &HashMap<u64, Vec<String>>,
+                ref_map: &HashMap<String, Vec<String>>,
                 out: &mut impl Write,
                 ) -> Result<(), Box<dyn std::error::Error>> {
     
@@ -396,7 +396,7 @@ fn print_record(network: &Network,
 
     for rate in neg_rates.iter() {
         for reference in rate.provider_references.iter() {
-            query.log_ref(*reference);
+            query.log_ref(reference);
             for prov in ref_map.get(reference).unwrap().iter(){
                 for price in rate.negotiated_prices.iter() {
                     write!(out, "{}", prov)?;
@@ -558,7 +558,7 @@ fn process_negotiated_prices<R: Read>(parser: &mut ReaderJsonParser<R>,
 /// Uses a helper for negotiated_prices array.
 /// If no relevant data (matching query) is found, returns Ok(None)
 fn process_negotiated_rates<R: Read>(parser: &mut ReaderJsonParser<R>,
-                                     ref_map: &HashMap<u64, Vec<String>>,
+                                     ref_map: &HashMap<String, Vec<String>>,
                                      ) -> Result< Option<Vec<Rate>>, Box<dyn std::error::Error> > {
 
 
@@ -617,12 +617,13 @@ fn process_negotiated_rates<R: Read>(parser: &mut ReaderJsonParser<R>,
                     bypass_key(parser)?;
                 }
             }
-            JsonEvent::Number(num) => {
-                let ref_num: u64 = num.as_ref().parse().expect("Failed to parse provider reference");
-                if ref_map.contains_key(&ref_num) {
-                    rate.provider_references.push(ref_num);
+            
+            JsonEvent::Number(val) | JsonEvent::String(val) => {
+                if ref_map.contains_key(val.as_ref()) {
+                    rate.provider_references.push(val.to_string());
                 }
             }
+
 
             JsonEvent::Eof => {
                 panic!("FATAL ERROR: Eof encountered in asa::process_negotiated_rates");
@@ -1079,7 +1080,7 @@ fn process_provider_refs<R: Read>(parser: &mut ReaderJsonParser<R>,
                                   ) -> Result<(), Box<dyn std::error::Error>> {
 
     // To hold the provider_group_id number 
-    let mut pg_id: Option<u64> = None; 
+    let mut pg_id: Option<String> = None; 
 
     // To count '{' and '['
     let mut cb = 0;
@@ -1153,9 +1154,10 @@ fn process_provider_refs<R: Read>(parser: &mut ReaderJsonParser<R>,
             }
 
             // Assertion: This will always be the provider group id. Maybe try to check this?
-            JsonEvent::Number(num) => {
-                pg_id = Some(num.as_ref().parse().expect("Group ID cannot convert to u64"));
+            JsonEvent::Number(val) | JsonEvent::String(val)=> {
+                pg_id = Some(val.to_string());
             }
+            
 
             _ => {}
         }
@@ -1446,23 +1448,23 @@ mod test_asa {
         c4.tin_type = t_type.clone();
         c5.tin_type = t_type.clone();
 
-        c_.group_id = Some(1789);
+        c_.group_id = Some(String::from("1789"));
         c_.tin_value = Some(String::from("null"));
 
         c1.tin_value = Some(String::from("9000"));
-        c1.group_id  = Some(22222);
+        c1.group_id  = Some(String::from("22222"));
 
         c2.tin_value = Some(String::from("881109921"));
-        c2.group_id  = Some(12345);
+        c2.group_id  = Some(String::from("12345"));
 
         c3.tin_value = Some(String::from("881109921"));
-        c3.group_id  = Some(12345);
+        c3.group_id  = Some(String::from("12345"));
 
         c4.tin_value = Some(String::from("999999999"));
-        c4.group_id  = Some(7777777);
+        c4.group_id  = Some(String::from("7777777"));
 
         c5.tin_value = Some(String::from("3030"));
-        c5.group_id  = Some(22222);
+        c5.group_id  = Some(String::from("22222"));
 
         let mut check = Vec::new();
         check.push(c_);
@@ -1529,6 +1531,57 @@ mod test_asa {
         let _ = q.log_code(&c, &t);
 
         assert_eq!(q.codes, check);
+
+    }
+
+    #[test]
+    fn test_log_ref() {
+
+        // g_id to log
+        let g = String::from("A001");
+
+        let mut providers: Vec<Provider> = Vec::new();
+        let mut check: Vec<Provider> = Vec::new();
+
+        // npi vals in vec
+        let mut n0 = Provider::new(123);  // Match
+        let mut n1 = Provider::new(246);  // No Match
+        let mut n2 = Provider::new(555);  // No Match
+        let mut n3 = Provider::new(3333); // Match
+        let mut n4 = Provider::new(4477); // No Match
+
+        n0.group_id = Some(g.clone());             // Match
+        n1.group_id = Some(String::from("11111")); // No Match
+        n2.group_id = Some(String::from("22222")); // No Match
+        n3.group_id = Some(String::from("22222")); // No Match
+        n4.group_id = Some(g.clone());             // Match
+
+
+        // Push copies to check vector
+        check.push(n0.clone());
+        check.push(n1.clone());
+        check.push(n2.clone());
+        check.push(n3.clone());
+        check.push(n4.clone());
+
+        // Hard code expected values to check vector
+        check[0].recorded = true;
+        check[4].recorded = true;
+
+        // Push unmodified originals to provider vec
+        providers.push(n0);
+        providers.push(n1);
+        providers.push(n2);
+        providers.push(n3);
+        providers.push(n4);
+
+        let mut q = Query::new();
+        q.providers = providers; // Move to Query to call log_code
+
+        // Mutate codes to mark recorded 
+        let _ = q.log_ref(&g);
+
+        assert_eq!(q.providers, check);
 
     }
 
