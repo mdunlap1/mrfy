@@ -56,6 +56,7 @@ use crate::query::{Query, Provider};
 //use crate::error::{NonFatalError}; // TODO remove non-fatal errors?
 
 use std::fs::File;
+use csv::Writer;
 use std::io::{BufReader, Read, Write};
 use std::collections::{HashSet, HashMap};
 
@@ -225,7 +226,7 @@ impl Price {
 
     /// Prints out the fields of a Price struct to out.
     /// Assumes that the format is consistend with print_header.
-    fn print_out(&self, out: &mut impl Write) -> Result<(), std::io::Error> {
+    fn _print_out(&self, out: &mut impl Write) -> Result<(), std::io::Error> {
         write!(out, "{}",self.negotiated_type)?;
         write!(out, ",")?;
         write!(out, "{}",self.negotiated_rate)?;
@@ -330,7 +331,7 @@ impl Network {
 
     /// Prints the fields of Network struct to out.
     /// Assumes consistency with print_header.
-    fn print_out(&self, out: &mut impl Write) -> Result<(), std::io::Error> {
+    fn _print_out(&self, out: &mut impl Write) -> Result<(), std::io::Error> {
         write!(out, "{}",self.negotiation_arrangement)?;
         write!(out, ",")?;
         write!(out, "{}",self.name)?;
@@ -346,9 +347,22 @@ impl Network {
     }
 }
 
+/// Prints the header using a csv::Writer.
+fn print_header2<W: std::io::Write>(writer: &mut csv::Writer<W>) -> Result< (), Box<dyn std::error::Error>> {
+    let h = "npi,tin_type,tin_value,group_id,negotiation_arrangement,name,\
+             billing_code_type,billing_code_type_version,billing_code,\
+             description,negotiated_type,negotiated_rate,expiration_date,\
+             service_code,billing_class,billing_code_modifier";
+
+    let header: Vec<&str> = h.split(',').collect();
+    writer.write_record(header)?;
+    writer.flush()?;
+
+    Ok(())
+}
 
 /// Prints the header for records to out.
-fn print_header(out: &mut impl Write) -> Result< (), std::io::Error> {
+fn _print_header(out: &mut impl Write) -> Result< (), std::io::Error> {
 
     // From ref map
     write!(out, "npi,tin_type,tin_value")?; // From ref_map
@@ -369,12 +383,66 @@ fn print_header(out: &mut impl Write) -> Result< (), std::io::Error> {
     Ok(())
 }
 
+/// Print record using a csv::Writer
+fn print_record2<W: std::io::Write> (network: &Network, 
+                                       query: &mut Query,
+                                     ref_map: &HashMap<String, Vec<String>>,
+                                      writer: &mut csv::Writer<W>,
+                                   ) -> Result<(), Box<dyn std::error::Error>> {
+
+    let neg_rates = network.negotiated_rates.as_ref().unwrap();
+
+    for rate in neg_rates.iter() {
+        for reference in rate.provider_references.iter() {
+            query.log_ref(reference);
+            for prov in ref_map.get(reference).unwrap().iter(){
+                for price in rate.negotiated_prices.iter() {
+                    
+                    // BUILD Vec here
+                    let mut rec = Vec::new();
+                    //rec.push(&prov); // BUG!
+                    for i in prov.split(',') {
+                        rec.push(i);
+                    }
+                    rec.push(&reference);
+
+                    // network._print_out(out)?;
+                    rec.push(&network.negotiation_arrangement);
+                    rec.push(&network.name);
+                    rec.push(&network.billing_code_type);
+                    rec.push(&network.billing_code_type_version);
+                    rec.push(&network.billing_code);
+                    rec.push(&network.description);
+
+                    // price._print_out(out)?;
+                    rec.push(&price.negotiated_type);
+                    rec.push(&price.negotiated_rate);
+                    rec.push(&price.expiration_date);
+                    rec.push(&price.service_code);
+                    rec.push(&price.billing_class);
+                    rec.push(&price.billing_code_modifier);
+                    
+
+                    writer.write_record(rec)?;
+                    writer.flush()?;
+
+                }
+            }
+        }
+    }
+
+    query.log_code(&network.billing_code, &network.billing_code_type);
+
+    Ok(())
+}
+
+
 /// Used to write matching data records to out.
 /// Assumes consistency with print_header.
 /// Uses print_out from Network and Price implementations.
 /// Includes information from ref_map such as npi, group id, tin type and tin value. 
 /// Calls log_ref and log_code from Query implementation.
-fn print_record(network: &Network, 
+fn _print_record(network: &Network, 
                 query: &mut Query,
                 ref_map: &HashMap<String, Vec<String>>,
                 out: &mut impl Write,
@@ -403,9 +471,9 @@ fn print_record(network: &Network,
                     write!(out, ",")?;
                     write!(out, "{}", reference)?;
                     write!(out, ",")?;
-                    network.print_out(out)?;
+                    network._print_out(out)?;
                     write!(out, ",")?;
-                    price.print_out(out)?;
+                    price._print_out(out)?;
                     write!(out, "\n")?;
 
                 }
@@ -747,6 +815,7 @@ fn process_in_network<R: Read>(parser: &mut ReaderJsonParser<R>,
     eprintln!("Progress bar based on estimate of {} total objects", APPRX_TOTAL_OBJS);
     eprintln!("Progress bar will update after every {} objects", INCR);
     
+    let mut writer = Writer::from_writer(out);
 
     let mut header_written: bool = false;
 
@@ -783,16 +852,24 @@ fn process_in_network<R: Read>(parser: &mut ReaderJsonParser<R>,
                 // ASSERTION: We will reach this only when we have something to write.
                 if cb == 0  && network.billing_code != "" && network.negotiated_rates.is_some() {
                     if header_written == false {
-                        print_header(out)?;
+                        //_print_header(out)?;
+                        print_header2(&mut writer)?;
                         header_written = true;
                     }
 
                     network.push_defaults();
                         
-                    print_record(&network,
-                                 query,
-                                 &ref_map,
-                                 out)?;
+                    /*
+                    _print_record(&network,
+                                  query,
+                                  &ref_map,
+                                  out)?;
+                    */
+                    print_record2(&network,
+                                  query,
+                                  &ref_map,
+                                  &mut writer)?;
+
                     
                 }
                 // Clear for re-use
